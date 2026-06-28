@@ -10,21 +10,23 @@
 ## Game
 <br>様々な種類のゲームをブラウザ内でプレイすることができます。
 # Deploy / デプロイ
-<a href="https://render.com/deploy?repo=https://github.com/yuto1106110/YouTube-Plus-Plus.git">
+<a href="https://render.com/deploy?repo=https://github.com/woolisbest-honke/yt-plus.next.git">
  <img src="https://render.com/images/deploy-to-render-button.svg" alt="Deploy to Render"><br>
 </a>
-<a href="https://vercel.com/new/clone?repository-url=https://github.com/yuto1106110/YouTube-Plus-Plus.git">
+<a href="https://vercel.com/new/clone?repository-url=https://github.com/woolisbest-honke/yt-plus.next.git">
   <img src="https://vercel.com/button" alt="Deploy to Vercel">
 </a>
 
-[![Deploy to Koyeb](https://www.koyeb.com/static/images/deploy/button.svg)](https://app.koyeb.com/deploy?type=git&builder=buildpack&repository=github.com/yuto1106110/YouTube-Plus-Plus&branch=main&name=YouTube-Plus-Plus)
+[![Deploy to Koyeb](https://www.koyeb.com/static/images/deploy/button.svg)](https://app.koyeb.com/deploy?type=git&builder=buildpack&repository=github.com/woolisbest-honke/yt-plus.next&branch=main&name=yt-plus.next)
 <br>
 
 # 作者情報
 ## yuto_110
 <br><a href="https://scratch.mit.edu/users/yuto_110/" target="_blank">Scratch</a>
+## woolisbest
+<br><a href="https://scratch.mit.edu/users/woolisbest/" target="_blank">Scratch</a>
 # 協力者 / Contributors
 <br>[Toka_Kun_](https://github.com/toka-kun) | Education Parameterの提供
 <br>[woolisbest](https://github.com/woolisbest-4520) | Education Parameterの提供
 <br>[sleepy-300](https://scratch.mit.edu/users/sleepy-300/) | 前UIの提供
-<br>©2026 yuto_110
+<br>©2026 yuto_110 woolisbest
