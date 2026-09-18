@@ -188,6 +188,25 @@ html[data-theme="dark"] {
         .page-btn:hover { background: rgba(128,128,128,0.15); }
 
         .empty { text-align: center; padding: 60px; color: var(--text-sub); }
+
+        /* フィルタ */
+        .filters { display: flex; flex-wrap: wrap; gap: 10px 18px; padding: 10px 0 14px;
+                   border-bottom: 1px solid var(--border); margin-bottom: 14px; }
+        .fgroup { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .flabel { font-size: 12px; color: var(--text-sub); margin-right: 2px; }
+        .fchip { font-size: 12px; padding: 4px 10px; border-radius: 14px; text-decoration: none;
+                 color: var(--text); background: var(--bg-card); border: 1px solid var(--border); }
+        .fchip:hover { background: rgba(128,128,128,0.18); }
+        .fchip.on { background: var(--text); color: var(--bg); border-color: transparent; }
+        .live-badge, .short-badge { background: #c00; color: #fff; font-size: 11px;
+                                    padding: 2px 6px; border-radius: 4px; }
+        .short-badge { background: #7b4dff; display: inline-block; }
+        .live-badge { position: absolute; top: 6px; left: 6px; }
+        .page-info { align-self: center; font-size: 12px; color: var(--text-sub); }
+        .pl-head { padding: 6px 0 12px; border-bottom: 1px solid var(--border); margin-bottom: 12px; }
+        .pl-head h2 { font-size: 20px; margin-bottom: 4px; }
+        .pl-meta { font-size: 13px; color: var(--text-sub); }
+        .video-thumb img { background: var(--bg-card); }
         .main { 
     margin-top: 56px; padding: 12px 16px;
     max-width: 1280px; margin-left: auto; margin-right: auto;
@@ -221,25 +240,59 @@ html[data-theme="dark"] {
 </div>
 
 <div class="main">
+    {% if not playlist %}
+    <nav class="filters" id="filters">
+        <div class="fgroup">
+            <span class="flabel">種類</span>
+            {% for key, label in [("", "すべて"), ("video", "動画"), ("channel", "チャンネル"), ("playlist", "再生リスト")] %}
+            <a class="fchip {% if (type or '') == key %}on{% endif %}"
+               href="/search?q={{ word | urlencode }}&page=1{{ '&type=' ~ key if key else '' }}">{{ label }}</a>
+            {% endfor %}
+        </div>
+        <div class="fgroup">
+            <span class="flabel">並び順</span>
+            {% for key, label in [("", "関連度"), ("upload_date", "新しい順"), ("views", "再生数順"), ("rating", "評価順")] %}
+            <a class="fchip {% if (sort_by or '') == key %}on{% endif %}"
+               href="/search?q={{ word | urlencode }}&page=1{{ '&sort_by=' ~ key if key else '' }}">{{ label }}</a>
+            {% endfor %}
+        </div>
+        <div class="fgroup">
+            <span class="flabel">長さ</span>
+            {% for key, label in [("", "指定なし"), ("short", "4分未満"), ("long", "20分以上")] %}
+            <a class="fchip {% if (duration or '') == key %}on{% endif %}"
+               href="/search?q={{ word | urlencode }}&page=1{{ '&duration=' ~ key if key else '' }}">{{ label }}</a>
+            {% endfor %}
+        </div>
+    </nav>
+    {% else %}
+    <div class="pl-head">
+        <h2>{{ playlist.title }}</h2>
+        <p class="pl-meta">{{ playlist.author }} · {{ playlist.count }}本</p>
+    </div>
+    {% endif %}
+
     {% if not results %}
-    <div class="empty">検索結果がありません</div>
+    <div class="empty">{% if failed %}API が応答しませんでした。少し置いてから再読み込みしてください{% else %}検索結果がありません{% endif %}</div>
     {% else %}
 
     {% for result in results %}
 
     {% if result["type"] == "video" %}
     <div class="result-item">
-        <a href="/watch?v={{ result['id'] }}" class="video-thumb">
-            <img loading="lazy"
-                 src="{% if proxy == 'True' %}/thumbnail?v={{ result['id'] }}{% else %}https://img.youtube.com/vi/{{ result['id'] }}/mqdefault.jpg{% endif %}"
+        <a href="/watch?v={{ result['id'] }}{{ '&list=' ~ playlist.list if playlist and playlist.list else '' }}" class="video-thumb">
+            <img loading="lazy" width="240" height="135"
+                 src="{{ result['thumb'] }}"
+                 onerror="this.onerror=null;this.src='/thumbnail?v={{ result['id'] }}'"
                  alt="{{ result['title'] }}">
             <span class="thumb-length">{{ result['length'] }}</span>
+            {% if result['is_live'] %}<span class="live-badge">LIVE</span>{% endif %}
         </a>
         <div class="video-info">
-            <a href="/watch?v={{ result['id'] }}"><h3>{{ result['title'] }}</h3></a>
+            <a href="/watch?v={{ result['id'] }}{{ '&list=' ~ playlist.list if playlist and playlist.list else '' }}"><h3>{{ result['title'] }}</h3></a>
             <p class="meta">
                 {% if result['view_count_text'] %}{{ result['view_count_text'] }}回視聴{% endif %}
                 {% if result['published'] %} · {{ result['published'] }}{% endif %}
+                {% if result['is_short'] %} · <span class="short-badge">Shorts</span>{% endif %}
             </p>
             <a class="channel-link" href="/channel/{{ result['authorId'] }}">
                 {{ result['author'] }}
@@ -250,8 +303,8 @@ html[data-theme="dark"] {
     {% elif result["type"] == "channel" %}
     <div class="channel-item">
         <a href="/channel/{{ result['id'] }}">
-            <img loading="lazy" src="{{ result['thumbnail'] }}" alt="{{ result['author'] }}"
-                 onerror="this.src='/img/logo/th.png'">
+            <img loading="lazy" width="80" height="80" src="{{ result['thumb'] }}" alt="{{ result['author'] }}"
+                 onerror="this.onerror=null;this.src='/img/logo/th.png'">
         </a>
         <div>
             <a href="/channel/{{ result['id'] }}"><h3>{{ result['author'] }}</h3></a>
@@ -262,9 +315,8 @@ html[data-theme="dark"] {
     {% elif result["type"] == "playlist" %}
     <div class="playlist-item">
         <a href="/playlist?list={{ result['id'] }}" class="playlist-thumb">
-            <img loading="lazy"
-                 src="{% if proxy == 'True' %}/thumbnail?v={{ result['thumbnail'] }}{% else %}https://img.youtube.com/vi/{{ result['thumbnail'] }}/mqdefault.jpg{% endif %}"
-                 alt="{{ result['title'] }}">
+            <img loading="lazy" width="240" height="135" src="{{ result['thumb'] }}" alt="{{ result['title'] }}"
+                 onerror="this.onerror=null;this.src='/thumbnail?v={{ result['id'] }}'">
             <span class="playlist-count">📋 {{ result['count'] }}本</span>
         </a>
         <div class="playlist-info">
@@ -280,8 +332,9 @@ html[data-theme="dark"] {
         {% if prev %}
         <a class="page-btn" href="{{ prev }}">← 前のページ</a>
         {% endif %}
+        <span class="page-info">{{ page }} ページ目 / {{ results | length }} 件</span>
         {% if next and results %}
-        <a class="page-btn" href="{{ next }}">次のページ →</a>
+        <a class="page-btn" id="more-btn" href="{{ next }}" data-api="{{ api_next or '' }}">次のページ →</a>
         {% endif %}
         </div>
         {% endif %}
@@ -310,6 +363,104 @@ function closeMenu() {
     document.getElementById('side-menu').classList.remove('open');
     document.getElementById('menu-overlay').classList.remove('open');
 }
+
+// ===== このページ内で次のページを読み込む(リロードなし) =====
+(function () {
+    const btn = document.getElementById('more-btn');
+    if (!btn) return;
+    const href = btn.getAttribute('href') || '';
+    // 検索もプレイリストも「JSON 版」を叩く(HTML を再取得して DOM を作り直す無駄を省く)
+    const api = btn.getAttribute('data-api') || href.replace(/^\/search\?/, '/api/search?').replace(/^\/playlist\?/, '/api/playlist?');
+    if (!api) return;   // API 版が無いページは通常のリンク移動に任せる
+    btn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        btn.textContent = '読み込み中…';
+        try {
+            const res = await fetch(api);
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const data = await res.json();
+            const list = document.querySelector('.main');
+            // DOM を無限に太らせない(200 件を超えたらリンク移動に任せる)
+            if (list.querySelectorAll('.result-item').length > 200) { btn.remove(); return; }
+            const frag = document.createElement('div');
+            (data.results || []).forEach(r => {
+                if (r.type !== 'video') return;
+                const div = document.createElement('div');
+                div.className = 'result-item';
+                const esc = t => String(t == null ? '' : t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+                div.innerHTML =
+                    '<a href="/watch?v=' + encodeURIComponent(r.id) + '" class="video-thumb">' +
+                    '<img loading="lazy" width="240" height="135" src="' + (r.thumb || ('/thumbnail?v=' + r.id)) + '" alt="">' +
+                    '<span class="thumb-length">' + esc(r.length) + '</span></a>' +
+                    '<div class="video-info"><a href="/watch?v=' + encodeURIComponent(r.id) + '"><h3>' + esc(r.title) + '</h3></a>' +
+                    '<p class="meta">' + esc(r.view_count_text) + '回視聴 · ' + esc(r.published) + '</p>' +
+                    '<a class="channel-link" href="/channel/' + encodeURIComponent(r.authorId) + '">' + esc(r.author) + '</a></div>';
+                frag.appendChild(div);
+            });
+            list.insertBefore(frag, btn.closest('.pagination'));
+            if (data.next) {
+                btn.setAttribute('href', btn.getAttribute('href').replace(/page=\d+/, 'page=' + data.next));
+                const cur = btn.getAttribute('data-api') || '';
+                if (cur) btn.setAttribute('data-api', cur.replace(/page=\d+/, 'page=' + data.next));
+                btn.textContent = 'さらに読み込む →';
+            } else {
+                btn.remove();
+            }
+        } catch (err) {
+            btn.textContent = '再試行 →';
+            console.error(err);
+        }
+    });
+})();
+
+// ===== サジェスト(jQuery 不要) =====
+(function () {
+    const input = document.getElementById('sq');
+    if (!input) return;
+    let box = document.createElement('div');
+    box.className = 'suggest-box';
+    box.style.cssText = 'display:none;position:absolute;z-index:1200;background:var(--topbar-bg);' +
+        'border:1px solid var(--border);border-radius:8px;box-shadow:0 6px 24px rgba(0,0,0,.25);overflow:hidden;min-width:240px';
+    document.body.appendChild(box);
+    let timer = null, items = [];
+    const close = () => { box.style.display = 'none'; box.innerHTML = ''; };
+    const open = () => {
+        const r = input.getBoundingClientRect();
+        box.style.top = (r.bottom + 4) + 'px';
+        box.style.left = r.left + 'px';
+        box.style.display = 'block';
+    };
+    const render = () => {
+        box.innerHTML = items.map(t =>
+            '<div class="sg" data-v="' + t.replace(/"/g, '&quot;') + '" style="padding:8px 12px;font-size:14px;cursor:pointer;color:var(--text)">' +
+            t.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])) + '</div>').join('');
+        open();
+    };
+    let last = '';
+    input.addEventListener('input', () => {
+        const v = input.value.trim();
+        if (v.length < 2 || v === last) return;
+        clearTimeout(timer);
+        timer = setTimeout(async () => {
+            try {
+                const res = await fetch('/suggest?keyword=' + encodeURIComponent(v));
+                if (!res.ok) return;
+                items = (await res.json()) || [];
+                last = v;
+                items.length ? render() : close();
+            } catch (e) { close(); }
+        }, 220);
+    });
+    box.addEventListener('mousedown', (e) => {
+        const el = e.target.closest('.sg');
+        if (!el) return;
+        input.value = el.getAttribute('data-v');
+        close();
+        input.form.submit();
+    });
+    document.addEventListener('click', (e) => { if (!e.target.closest('.suggest-box') && e.target !== input) close(); });
+    input.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+})();
 </script>
-</body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a3d07dea691e9693',t:'MTc4OTczNTk4OA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
