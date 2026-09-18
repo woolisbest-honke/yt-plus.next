@@ -282,7 +282,8 @@ html[data-theme="dark"] {
     {% endif %}
 
     <div class="channel-info">
-        <img class="channel-icon" src="{{ channel_icon }}" alt="{{ channel_name }}">
+        <img class="channel-icon" src="{{ channel_icon }}" alt="{{ channel_name }}"
+             onerror="this.onerror=null;this.src='/img/logo/th.png'">
         <div class="channel-meta">
             <h1>{{ channel_name }}</h1>
             <div class="sub-count">
@@ -327,8 +328,9 @@ html[data-theme="dark"] {
                  data-published="{{ v.get('published', 0) }}">
                 <a href="/watch?v={{ v['id'] }}">
                     <div class="thumb-wrap">
-                        <img loading="lazy"
-                             src="{% if proxy == 'True' %}/thumbnail?v={{ v['id'] }}{% else %}https://img.youtube.com/vi/{{ v['id'] }}/mqdefault.jpg{% endif %}"
+                        <img loading="lazy" width="320" height="180"
+                             src="{{ v['thumb'] or ('/thumbnail?v=' ~ v['id']) }}"
+                             onerror="this.onerror=null;this.src='/thumbnail?v={{ v['id'] }}'"
                              alt="{{ v['title'] }}">
                         <span class="thumb-length">{{ v['length_str'] }}</span>
                     </div>
@@ -362,8 +364,9 @@ html[data-theme="dark"] {
                  data-published="{{ v.get('published', 0) }}">
                 <a href="/watch?v={{ v['id'] }}">
                     <div class="short-thumb">
-                        <img loading="lazy"
-                             src="{% if proxy == 'True' %}/thumbnail?v={{ v['id'] }}{% else %}https://img.youtube.com/vi/{{ v['id'] }}/mqdefault.jpg{% endif %}"
+                        <img loading="lazy" width="320" height="180"
+                             src="{{ v['thumb'] or ('/thumbnail?v=' ~ v['id']) }}"
+                             onerror="this.onerror=null;this.src='/thumbnail?v={{ v['id'] }}'"
                              alt="{{ v['title'] }}">
                         <span class="thumb-short-badge">SHORT</span>
                     </div>
@@ -387,8 +390,9 @@ html[data-theme="dark"] {
         <div class="video-card">
             <a href="/watch?v={{ v['id'] }}">
                 <div class="thumb-wrap">
-                    <img loading="lazy"
-                         src="{% if proxy == 'True' %}/thumbnail?v={{ v['id'] }}{% else %}https://img.youtube.com/vi/{{ v['id'] }}/mqdefault.jpg{% endif %}"
+                    <img loading="lazy" width="320" height="180"
+                         src="{{ v['thumb'] or ('/thumbnail?v=' ~ v['id']) }}"
+                         onerror="this.onerror=null;this.src='/thumbnail?v={{ v['id'] }}'"
                          alt="{{ v['title'] }}">
                     <span class="thumb-length" style="background:#ff0000;">🔴 LIVE</span>
                 </div>
@@ -412,8 +416,9 @@ html[data-theme="dark"] {
             <div class="playlist-card">
                 <a href="/playlist?list={{ pl['id'] }}">
                     <div class="playlist-thumb">
-                        <img loading="lazy"
-                             src="{% if pl['thumbnail'] %}https://img.youtube.com/vi/{{ pl['thumbnail'] }}/mqdefault.jpg{% else %}https://img.youtube.com/vi/default/mqdefault.jpg{% endif %}"
+                        <img loading="lazy" width="320" height="180"
+                             src="{{ pl['thumbnail'] or '/img/logo/th.png' }}"
+                             onerror="this.onerror=null;this.src='/img/logo/th.png'"
                              alt="{{ pl['title'] }}">
                         <div class="playlist-count">📋 {{ pl['video_count'] }}本</div>
                     </div>
@@ -571,5 +576,5 @@ function updateSubscribeBtn(subscribed) {
 }
 updateSubscribeBtn(isSubscribed("{{ channel_id }}"));
 </script>
-</body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a3d0807f7c8c9693',t:'MTc4OTczNjA5NA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
