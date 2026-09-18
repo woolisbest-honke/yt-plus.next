@@ -1,6 +1,26 @@
-jinja2
-requests
-fastapi
-uvicorn
-yt-dlp
-pymongo
+# ===== 必須(このアプリが実際に import するものだけ) =====
+jinja2>=3.1
+fastapi>=0.110
+# 単体で足りる。無料枠(Render/Railway など)はメモリが薄いので「おまけ」は付けず、
+# 必要なら下の任意パッケージを自分で有効にする。
+uvicorn>=0.29
+# instance プールへの非同期 HTTP クライアント(旧: requests の同期呼び出し)
+httpx>=0.27
+
+# ===== 任意(入れると速くなる / あってもなくても動く) =====
+# CPU/メモリに余裕があるデプロイだけ有効にする事。無料プランでは入れない方が軽い。
+# orjson>=3.9      # JSON の読み書きが数倍速い(無いと標準 json に自動で戻る)
+# uvloop>=0.19     # event loop の差し替え(uvicorn が入っていれば自動で使う)
+# httptools>=0.6   # リクエスト解析(H11 より速い)
+
+# ===== 任意機能のパッケージ =====
+# 登録/履歴の Mongo 保存用。MONGODB_URI を設定しないなら不要(設定を忘れた場合も
+# ローカル保存へ自動でフォールバックする)。
+pymongo>=4.6
+
+# ===== 削除しました =====
+# yt-dlp   … YouTube を直接取得する手段のため、IP がBANされている環境では必ず失敗する。
+#            再生 URL は Invidious instance の /api/v1/videos + /latest_version 経由に
+#            置き換え済み(/api/ytdlp/{id} は互換のため残すが、内部は instance 経由)。
+# requests … 同期 HTTP。シングルスレッドで多数の instance を待つと詰まるため、
+#            httpx(非同期 + 接続プール + 同時実行数の上限)に置き換えた。
